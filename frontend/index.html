@@ -1,12 +1,198 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
-    <title>Head Replacer</title>
-</head>
-<body>
-    <h1>Head Replacer</h1>
 
-    <p>MVP is running</p>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Head Swapper</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .upload-block {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .upload-block h2 {
+            margin-top: 0;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 30px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Head Swapper</h1>
+
+    <div class="upload-block">
+
+        <h2>1. Видео</h2>
+
+        <input
+            id="videoInput"
+            type="file"
+            accept=".mp4,.mov,.avi"
+        >
+
+    </div>
+
+
+    <div class="upload-block">
+
+        <h2>2. 3D-модель</h2>
+
+        <input
+            id="modelInput"
+            type="file"
+            accept=".glb,.gltf,.obj,.fbx"
+        >
+
+    </div>
+
+
+    <button id="uploadButton">
+        Загрузить
+    </button>
+
+
+    <div id="status"></div>
+
+
+    <script>
+
+        const videoInput = document.getElementById("videoInput");
+        const modelInput = document.getElementById("modelInput");
+        const uploadButton = document.getElementById("uploadButton");
+        const status = document.getElementById("status");
+
+
+        function setStatus(message) {
+            status.textContent = message;
+        }
+
+
+        async function uploadFile(url, file) {
+
+            const formData = new FormData();
+
+            formData.append("file", file);
+
+
+            const response = await fetch(url, {
+                method: "POST",
+                body: formData
+            });
+
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP error: ${response.status}`
+                );
+            }
+
+
+            return await response.json();
+        }
+
+
+        uploadButton.addEventListener("click", async () => {
+
+            const videoFile = videoInput.files[0];
+            const modelFile = modelInput.files[0];
+
+
+            if (!videoFile) {
+                setStatus("Выберите видео.");
+                return;
+            }
+
+
+            if (!modelFile) {
+                setStatus("Выберите 3D-модель.");
+                return;
+            }
+
+
+            try {
+
+                setStatus("Загружаем видео...");
+
+
+                const videoResult = await uploadFile(
+                    "/upload/video",
+                    videoFile
+                );
+
+
+                if (!videoResult.success) {
+                    throw new Error(videoResult.error);
+                }
+
+
+                setStatus("Загружаем 3D-модель...");
+
+
+                const modelResult = await uploadFile(
+                    "/upload/model",
+                    modelFile
+                );
+
+
+                if (!modelResult.success) {
+                    throw new Error(modelResult.error);
+                }
+
+
+                setStatus(
+                    "Готово!\n\n" +
+                    "Видео:\n" +
+                    JSON.stringify(videoResult, null, 2) +
+                    "\n\n" +
+                    "Модель:\n" +
+                    JSON.stringify(modelResult, null, 2)
+                );
+
+            } catch (error) {
+
+                console.error(error);
+
+                setStatus(
+                    "Ошибка:\n" +
+                    error.message
+                );
+            }
+
+        });
+
+    </script>
+
 </body>
+
 </html>
