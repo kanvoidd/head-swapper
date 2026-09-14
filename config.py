@@ -29,7 +29,7 @@ ALLOWED_MODEL_EXTENSIONS = {
 BASE_DIR = Path(__file__).resolve().parent  # Указывает на корень проекта
 
 FRONTEND_DIR = BASE_DIR / "frontend"
-STORAGE_DIR = BASE_DIR / "storage"
+STORAGE_DIR = BASE_DIR / "infrastructure/storage"
 
 UPLOADS_DIR = STORAGE_DIR / "uploads"
 PROCESSING_DIR = STORAGE_DIR / "processing"
