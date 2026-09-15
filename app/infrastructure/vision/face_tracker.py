@@ -40,8 +40,9 @@ class FaceTracker:
 
                 frame_timestamp_ms = int(frame_index / fps * 1000)
                 frame_index += 1
-                
-                landmarked = self.track_face_landmarks(frame, frame_timestamp_ms)
+
+                processed_frame = self.process_frame(frame)
+                landmarked = self.landmarker.detect_for_video(processed_frame, frame_timestamp_ms)
 
                 landmarked_frame = self.draw_face_landmarks(
                     frame=frame, 
@@ -62,8 +63,7 @@ class FaceTracker:
             cv2.destroyAllWindows()
 
 
-    def track_face_landmarks(self, frame, frame_timestamp_ms):
-
+    def process_frame(self, frame):
         h, w = frame.shape[:2]
         scale = DETECT_WIDTH / w
 
@@ -71,13 +71,15 @@ class FaceTracker:
         rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
         mp_frame = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
-        lm_res = self.landmarker.detect_for_video(mp_frame, frame_timestamp_ms)
+        return mp_frame
 
-        return lm_res
+    def draw_face_landmarks(self, frame, landmarked_frame, frame_height, frame_width, radius=3, color=(255, 0, 0), thickness=1):
 
-    def draw_face_landmarks(self, frame, landmarked_frame, frame_height, frame_width, radius=1, color=(255, 0, 0), thickness=0.5):
+        # лицо не найдено, возвращаем кадр как есть
+        if not landmarked_frame.face_landmarks:
+            return frame
+
         face = landmarked_frame.face_landmarks[0]
-
         for lm in face:
             center = (int(lm.x * frame_width), int(lm.y * frame_height))
             frame = cv2.circle(frame, center, radius, color, thickness)
@@ -85,8 +87,8 @@ class FaceTracker:
         return frame
             
 
-# if __name__ == "__main__":
-#     video_path = UPLOADS_DIR / "b2a5c2ef-0494-40e5-9bfd-c55a3db3ce04.mp4"
-#     face_tracker = FaceTracker(video_path=video_path)
+if __name__ == "__main__":
+    video_path = UPLOADS_DIR / "b2a5c2ef-0494-40e5-9bfd-c55a3db3ce04.mp4"
+    face_tracker = FaceTracker(video_path=video_path)
 
-#     face_tracker.mark_face_landmarks()
+    face_tracker.mark_face_landmarks()
