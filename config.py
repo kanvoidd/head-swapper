@@ -29,7 +29,7 @@ ALLOWED_MODEL_EXTENSIONS = {
 BASE_DIR = Path(__file__).resolve().parent  # Указывает на корень проекта
 
 FRONTEND_DIR = BASE_DIR / "frontend"
-STORAGE_DIR = BASE_DIR / "infrastructure/storage"
+STORAGE_DIR = BASE_DIR / "app/infrastructure/storage"
 
 UPLOADS_DIR = STORAGE_DIR / "uploads"
 PROCESSING_DIR = STORAGE_DIR / "processing"
@@ -38,3 +38,6 @@ RESULTS_DIR = STORAGE_DIR / "results"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSING_DIR.mkdir(parents=True, exist_ok=True)
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+BLAZE_FACE_MODEL_PATH = BASE_DIR / "app/infrastructure/storage/models/face_landmarker.task"
