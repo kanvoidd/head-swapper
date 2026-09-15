@@ -1,9 +1,9 @@
-from fastapi import File
+from fastapi import UploadFile
 
 from uuid import uuid4
 from config import *
 
-async def upload_model_service(file: File):
+async def upload_model_service(file: UploadFile):
     file_extension = Path(file.filename).suffix.lower()
     
     if file_extension not in ALLOWED_MODEL_EXTENSIONS:

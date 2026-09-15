@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from app.presentation.api.routes.upload_video import router as upload_video_router
-from app.presentation.api.routes.upload_model import router as upload_model_router
+from app.presentation.api.routes.upload_video_router import router as upload_video_router
+from app.presentation.api.routes.upload_model_router import router as upload_model_router
 
 from config import *
 
