@@ -22,6 +22,13 @@ ALLOWED_MODEL_EXTENSIONS = {
     ".fbx"
 }
 
+
+LANDMARKS_RADIUS = 3
+LANDMARKS_COLOR = (255, 0, 0)
+LANDMARKS_THICKNESS = 2
+
+DETECT_WIDTH = 640
+
 # --------------------------------------------------
 # Paths
 # --------------------------------------------------

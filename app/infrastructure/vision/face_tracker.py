@@ -1,65 +1,92 @@
 import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 
 import cv2
 from cv2 import VideoCapture
 
-from config import BLAZE_FACE_MODEL_PATH, UPLOADS_DIR
+from config import BLAZE_FACE_MODEL_PATH, UPLOADS_DIR, LANDMARKS_RADIUS, LANDMARKS_COLOR, LANDMARKS_THICKNESS, DETECT_WIDTH
 
-test_img = UPLOADS_DIR / "photo_example.jpg"
+class FaceTracker:
 
-BaseOptions = mp.tasks.BaseOptions
-FaceLandmarker = mp.tasks.vision.FaceLandmarker
-FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
-VisionRunningMode = mp.tasks.vision.RunningMode
+    def __init__(self, video_path):
+        self.video_path = video_path
+        self.BaseOptions = mp.tasks.BaseOptions
+        self.FaceLandmarker = mp.tasks.vision.FaceLandmarker
+        self.FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
+        self.VisionRunningMode = mp.tasks.vision.RunningMode
 
-options = FaceLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=str(BLAZE_FACE_MODEL_PATH)),
-    running_mode=VisionRunningMode.VIDEO
-)
+        self.options = self.FaceLandmarkerOptions(
+            base_options=self.BaseOptions(model_asset_path=str(BLAZE_FACE_MODEL_PATH)),
+            running_mode=self.VisionRunningMode.VIDEO
+        )
+
+        self.landmarker = self.FaceLandmarker.create_from_options(self.options)
 
 
-def mark_face_landmarks(video_path: str):
+    def mark_face_landmarks(self):
 
-    cap = VideoCapture(video_path)
+        cap = VideoCapture(self.video_path)
 
-    frame_index = 0
+        frame_index = 0
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 
-        # Внутренняя константа OpenCv CAP_PROP_POS_MSEC нередко возвращает 0 или некорректно рассчитывает время
-        # Поэтому считаем timestamp вручную
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
-        frame_timestamp_ms = int(frame_index / fps * 1000)
-        frame_index += 1
-        
-        landmarked_frame = track_face_landmarks(frame, frame_timestamp_ms)
-        # cv2.imshow('frame', landmarked_frame)
-        #if cv2.waitKey(33) == ord('q'):
-            #break
+        try:
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                frame_timestamp_ms = int(frame_index / fps * 1000)
+                frame_index += 1
+                
+                landmarked = self.track_face_landmarks(frame, frame_timestamp_ms)
+
+                landmarked_frame = self.draw_face_landmarks(
+                    frame=frame, 
+                    landmarked_frame=landmarked,
+                    frame_height=frame_height,
+                    frame_width=frame_width,
+                    radius=LANDMARKS_RADIUS,
+                    color=LANDMARKS_COLOR,
+                    thickness=LANDMARKS_THICKNESS,
+                )
+
+                cv2.imshow('frame', landmarked_frame)
+                if cv2.waitKey(5) == ord('q'):
+                    break
+        finally:                
+            cap.release()
+            self.landmarker.close()
+            cv2.destroyAllWindows()
+
+
+    def track_face_landmarks(self, frame, frame_timestamp_ms):
+
+        h, w = frame.shape[:2]
+        scale = DETECT_WIDTH / w
+
+        resized_frame = cv2.resize(frame, (DETECT_WIDTH, int(scale * h)))
+        rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
+        mp_frame = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+
+        lm_res = self.landmarker.detect_for_video(mp_frame, frame_timestamp_ms)
+
+        return lm_res
+
+    def draw_face_landmarks(self, frame, landmarked_frame, frame_height, frame_width, radius=1, color=(255, 0, 0), thickness=0.5):
         face = landmarked_frame.face_landmarks[0]
-        for i, lm in enumerate(face):
-            X = lm.x
-            Y = lm.y
-            Z = lm.z
-            print(f"landmark {i}:\nX: {X}\nY: {Y}\nZ: {Z}\n\n")
 
-    cap.release()
+        for lm in face:
+            center = (int(lm.x * frame_width), int(lm.y * frame_height))
+            frame = cv2.circle(frame, center, radius, color, thickness)
 
+        return frame
+            
 
-def track_face_landmarks(frame, frame_timestamp_ms):
-    
-    mp_frame = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
+# if __name__ == "__main__":
+#     video_path = UPLOADS_DIR / "b2a5c2ef-0494-40e5-9bfd-c55a3db3ce04.mp4"
+#     face_tracker = FaceTracker(video_path=video_path)
 
-    with FaceLandmarker.create_from_options(options) as landmarker:
-        lm_res = landmarker.detect_for_video(mp_frame, frame_timestamp_ms)
-
-    return lm_res
-
-if __name__ == "__main__":
-    mark_face_landmarks(UPLOADS_DIR / "b2a5c2ef-0494-40e5-9bfd-c55a3db3ce04.mp4")
-
+#     face_tracker.mark_face_landmarks()
