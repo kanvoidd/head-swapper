@@ -1,4 +1,5 @@
 from pathlib import Path
+import numpy as np
 
 # --------------------------------------------------
 # Constants
@@ -22,12 +23,43 @@ ALLOWED_MODEL_EXTENSIONS = {
     ".fbx"
 }
 
-
 LANDMARKS_RADIUS = 3
 LANDMARKS_COLOR = (255, 0, 0)
 LANDMARKS_THICKNESS = 2
 
 DETECT_WIDTH = 640
+
+# --------------------------------------------------
+# Head Pose Constants
+# --------------------------------------------------
+
+# Object points
+CANONICAL_3D_FACE_MODEL = [
+    [0.0,   0.0,   0.0],      # nose
+    [0.0,  -63.6, -12.5],     # chin
+    [-43.3, 32.7, -26.0],     # left eye
+    [43.3,  32.7, -26.0],     # right eye
+    [-28.9, -28.9, -24.1],    # left mouth
+    [28.9,  -28.9, -24.1],    # right mouth
+]
+
+OBJECT_POINTS = np.array(CANONICAL_3D_FACE_MODEL, dtype=np.float64)
+
+# MediaPipe landmarks
+NOSE_INDEX = 1
+CHIN_INDEX = 152
+LEFT_EYE_INDEX = 263
+RIGHT_EYE_INDEX = 33
+LEFT_MOUTH_INDEX = 291
+RIGHT_MOUTH_INDEX = 61
+
+
+# Camera approximation
+ASSUMED_FOCAL_LENGTH_FACTOR = 1.0
+
+
+# Distortion
+DIST_COEFFS = np.zeros((4, 1), dtype=np.float64)
 
 # --------------------------------------------------
 # Paths
