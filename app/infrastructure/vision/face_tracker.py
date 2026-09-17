@@ -27,6 +27,13 @@ class FaceTracker:
 
         self.landmarker = self.FaceLandmarker.create_from_options(self.options)
 
+    def detect_face_landmarks(self, frame, frame_timestamp_ms):
+
+        processed_frame = self.prepare_frame_for_mediapipe(frame)
+        landmark_result = self.landmarker.detect_for_video(processed_frame, frame_timestamp_ms)
+
+        return landmark_result
+    
 
     def mark_face_landmarks(self, video_path, output, container):
 
@@ -83,8 +90,7 @@ class FaceTracker:
             frame_timestamp_ms = int(context.frame_index / context.fps * 1000)
             context.frame_index += 1
 
-            processed_frame = self.prepare_frame_for_mediapipe(frame)
-            landmark_result = self.landmarker.detect_for_video(processed_frame, frame_timestamp_ms)
+            landmark_result = self.detect_face_landmarks(frame=frame, frame_timestamp_ms=frame_timestamp_ms)
 
             landmarked_frame = self.draw_face_landmarks(
                 frame=frame, 
@@ -97,6 +103,8 @@ class FaceTracker:
             )
 
             context.writer.write(landmarked_frame)
+
+        return 
 
 
     def prepare_frame_for_mediapipe(self, frame):
